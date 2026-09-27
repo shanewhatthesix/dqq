@@ -18,3 +18,6 @@ desktop.ini
 
 # ZCode 工作区的文件搜索忽略规则，只对本机工具生效
 .zcodeignore
+
+# 部署脚本会在这里存 GitHub Token，绝不能提交
+deploy/.deploy-config.bat
