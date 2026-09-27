@@ -138,21 +138,48 @@ Location: http://jxsdfz.bbroot.com/     ← 这个域名当时是 NXDOMAIN
 
 ### 第一步：在 DNSHE 加解析记录
 
-`bbroot.com` 的 NS 是 `a.nic.dnshe.org` / `b.nic.dnshe.org`，登录 DNSHE 控制台，
-在 `bbroot.com` 的 DNS 解析里加一条：
+登录 DNSHE 控制台，找到 `jxsdfz.bbroot.com` 的 DNS 解析，**推荐直接用 A 记录**（原因见下）。
 
-| 字段 | 填什么 |
-|---|---|
-| 记录类型 | `CNAME` |
-| 主机记录 / 名称 | `jxsdfz` |
-| 记录值 / 目标 | `shanewhatthesix.github.io` |
-| TTL | 600 或默认 |
+#### 方案 A：4 条 A 记录（推荐）
 
-三个容易填错的地方：
+| 记录类型 | 记录名称 | 记录内容 | TTL |
+|---|---|---|---|
+| `A` | `@` | `185.199.108.153` | 自动 |
+| `A` | `@` | `185.199.109.153` | 自动 |
+| `A` | `@` | `185.199.110.153` | 自动 |
+| `A` | `@` | `185.199.111.153` | 自动 |
 
-1. **目标不要带仓库名** —— 是 `shanewhatthesix.github.io`，不是 `shanewhatthesix.github.io/dqq`
-2. 主机记录只填 `jxsdfz`（除非面板明确要求填完整域名）
-3. 有些面板要求结尾带点：`shanewhatthesix.github.io.`
+这四条是 GitHub Pages 的官方 IP。建 4 条是为了冗余，少一条也能用但别只建一条。
+
+#### 方案 B：1 条 CNAME（可能被拒）
+
+| 记录类型 | 记录名称 | 记录内容 | TTL |
+|---|---|---|---|
+| `CNAME` | `@` | `shanewhatthesix.github.io` | 自动 |
+
+**但 DNSHE 很可能拒绝这条**，因为 `jxsdfz.bbroot.com` 是作为独立 zone 接入的
+（DNSHE 官网写的是「子域名通过 NS 委派独立接入」），而 zone 顶点必然有 NS/SOA 记录，
+**DNS 规范不允许 CNAME 与其它记录共存于同一名字**。DNSHE 的 API 文档里也专门列了
+`cname_conflict` 这个错误码。
+
+用控制台保存 CNAME 时报的 `操作失败，请稍后重试`（带一个 domain-xxx 错误编号）
+多半就是这个冲突，而不是真的"稍后重试"。
+
+#### 两个字段最容易填反
+
+面板里「当前域名」已经显示 `jxsdfz.bbroot.com` 了，所以：
+
+- **记录名称填 `@`**（表示"就是这个域名本身"），**不要**把目标域名填在这里 ——
+  否则会变成 `shanewhatthesix.github.io.jxsdfz.bbroot.com`
+- **记录内容才填目标**：A 记录填 IP，CNAME 填 `shanewhatthesix.github.io`
+
+CNAME 的目标**不要带仓库名**，是 `shanewhatthesix.github.io`，不是 `.../dqq`。
+
+#### 如果只想用 CNAME
+
+可以换个名字，比如记录名称填 `www`，然后把自定义域名设成 `www.jxsdfz.bbroot.com`。
+非顶点的 CNAME 一定合法。
+
 
 ### 第二步：确认 DNS 真的生效了，再往下走
 
@@ -164,6 +191,8 @@ nslookup jxsdfz.bbroot.com 8.8.8.8
 **看到 NXDOMAIN 就停在这里，别去动 GitHub 的设置。**
 
 也可以直接试访问：`curl -I http://jxsdfz.bbroot.com/`
+
+> A 记录的话，`nslookup` 会直接返回 `185.199.10x.153`，不会显示 CNAME，这是正常的。
 
 ### 第三步：DNS 通了之后，再在 GitHub 设域名
 
