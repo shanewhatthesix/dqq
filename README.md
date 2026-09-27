@@ -117,23 +117,29 @@ git push
 
 ## 自定义域名
 
-已绑定 **jxsdfz.bbroot.com**（在 DNSHE 注册的免费域名）。
+打算绑定 **jxsdfz.bbroot.com**（DNSHE 注册的免费域名）。目前还没配完，下面是踩过坑之后的正确顺序。
 
-### 当前状态
+### ⚠️ 顺序很关键：先配 DNS，再在 GitHub 设域名
 
-| 项 | 状态 |
-|---|---|
-| GitHub Pages 自定义域名 | 已设置 |
-| 仓库里的 `CNAME` 文件 | 已由 GitHub 自动创建，内容是 `jxsdfz.bbroot.com` |
-| `shanewhatthesix.github.io/dqq` | **正常可用**（200） |
-| `jxsdfz.bbroot.com` | **还没解析**，需要在 DNSHE 加一条 CNAME |
+**千万别反过来。** 这条是踩出来的：
 
-> 实测确认过：**先设自定义域名不会弄坏原来的 github.io 地址**。
-> GitHub 要等 DNS 真能解析之后才会把请求 301 过去，所以这个顺序是安全的。
+在 GitHub 上设了自定义域名、但 DNS 还没配好的话，GitHub 过几分钟会开始把
+`shanewhatthesix.github.io/dqq` **301 到自定义域名**，而那个域名还解析不了 ——
+**整个站点直接打不开**。实测到的响应：
 
-### 需要在 DNSHE 面板加的记录
+```
+HTTP/1.1 301 Moved Permanently
+Location: http://jxsdfz.bbroot.com/     ← 这个域名当时是 NXDOMAIN
+```
 
-`bbroot.com` 的 NS 是 `a.nic.dnshe.org` / `b.nic.dnshe.org`，所以要在 DNSHE 的 DNS 解析里加：
+**更坑的地方**：刚设完那几分钟 github.io 还是 200，看着一切正常，
+要等重定向传播开（我这边大约几分钟）才会暴露出问题。
+所以**别拿"刚设完还能访问"来判断安全** —— 我第一次就是这么误判的。
+
+### 第一步：在 DNSHE 加解析记录
+
+`bbroot.com` 的 NS 是 `a.nic.dnshe.org` / `b.nic.dnshe.org`，登录 DNSHE 控制台，
+在 `bbroot.com` 的 DNS 解析里加一条：
 
 | 字段 | 填什么 |
 |---|---|
@@ -145,39 +151,50 @@ git push
 三个容易填错的地方：
 
 1. **目标不要带仓库名** —— 是 `shanewhatthesix.github.io`，不是 `shanewhatthesix.github.io/dqq`
-2. 有些面板要求结尾带点：`shanewhatthesix.github.io.`（带上通常也没错）
-3. 主机记录只填 `jxsdfz`，别填成完整域名（除非面板明确要求）
+2. 主机记录只填 `jxsdfz`（除非面板明确要求填完整域名）
+3. 有些面板要求结尾带点：`shanewhatthesix.github.io.`
 
-### 加完之后
-
-DNS 生效（几分钟到几小时，通常很快）后 GitHub 会自动做两件事：
-
-1. 校验 DNS 并签发 Let's Encrypt 证书（可能需要几十分钟）
-2. 之后就可以在 **Settings → Pages** 里勾选 **Enforce HTTPS**
-
-用命令查进度：
-
-```bash
-gh api /repos/shanewhatthesix/dqq/pages --jq '.cname + " | DNS:" + (.protected_domain_state // "未校验") + " | HTTPS强制:" + (.https_enforced|tostring)'
-```
-
-想查 DNS 是否生效：
+### 第二步：确认 DNS 真的生效了，再往下走
 
 ```bash
 nslookup jxsdfz.bbroot.com 8.8.8.8
 ```
 
-解析结果里出现 `shanewhatthesix.github.io` 或 `185.199.10x.153` 这类 GitHub Pages 的 IP 就是通了。
+结果里出现 `shanewhatthesix.github.io` 或 `185.199.10x.153` 这类 GitHub Pages 的 IP 才算通。
+**看到 NXDOMAIN 就停在这里，别去动 GitHub 的设置。**
+
+也可以直接试访问：`curl -I http://jxsdfz.bbroot.com/`
+
+### 第三步：DNS 通了之后，再在 GitHub 设域名
+
+```bash
+gh api --method PUT /repos/shanewhatthesix/dqq/pages -f "cname=jxsdfz.bbroot.com"
+```
+
+GitHub 会自动往仓库里提交一个 `CNAME` 文件（内容就是域名），然后：
+
+1. 校验 DNS 并自动签发 Let's Encrypt 证书（可能要几十分钟）
+2. 证书好了之后，在 **Settings → Pages** 勾选 **Enforce HTTPS**
+
+查进度：
+
+```bash
+gh api /repos/shanewhatthesix/dqq/pages   --jq '.cname + " | DNS:" + (.protected_domain_state // "未校验") + " | HTTPS强制:" + (.https_enforced|tostring)'
+```
+
+### 万一搞坏了怎么退回
+
+只要把自定义域名清空，github.io 立刻恢复（我实测过，几十秒内生效）：
+
+```bash
+gh api --method PUT /repos/shanewhatthesix/dqq/pages -f "cname="
+```
+
+GitHub 会自动删掉仓库里的 `CNAME` 文件，然后本地 `git fetch && git reset --hard origin/main` 对齐。
 
 ### 换域名
 
-想换一个域名：改 DNSHE 里的记录，然后
-
-```bash
-gh api --method PUT /repos/shanewhatthesix/dqq/pages -f "cname=新域名"
-```
-
-GitHub 会自动更新仓库里的 `CNAME` 文件。**不要在网页上手改 `CNAME` 文件**，会被下次部署覆盖。
+改 DNSHE 里的记录，再执行一次上面的 PUT 命令。**不要在网页上手改 `CNAME` 文件**，会被覆盖。
 
 ## 改完代码要给资源加版本号
 
