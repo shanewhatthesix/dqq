@@ -1,6 +1,12 @@
 # 统一行尾。社团里 Windows / Mac 混着用，不加这个的话
 # 每换一个人提交，所有文件都会显示「整个文件被改动」，diff 完全没法看。
 * text=auto eol=lf
+# 批处理文件必须保持 CRLF 行尾。
+# 只有 LF 的话，cmd 执行到 goto / 标签跳转时可能出错，
+# 尤其是从 GitHub 克隆到 Windows 上之后。
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
 
 # 明确按二进制处理，别让 git 去猜
 *.png binary
