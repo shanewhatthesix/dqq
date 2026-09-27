@@ -39,27 +39,20 @@ python -m http.server 8000
 gh auth login --hostname github.com --git-protocol https --web --skip-ssh-key
 ```
 
-终端会依次问你几个问题，照下面选：
-
-| 提示 | 选什么 |
-|---|---|
-| What account do you want to log into? | `GitHub.com` |
-| What is your preferred protocol for Git operations? | `HTTPS`（已经被上面的参数跳过） |
-| Authenticate Git with your GitHub credentials? | `Yes` |
-| How would you like to authenticate? | `Login with a web browser`（已经被 `--web` 跳过） |
-
-然后终端会打印这样两行：
+这条命令把主机、协议、认证方式都指定好了，所以**它不会再问你任何问题**，
+只会直接打印两行：
 
 ```
 ! One-time code (XXXX-XXXX) copied to clipboard
 Open this URL to continue in your web browser: https://github.com/login/device
 ```
 
-浏览器会自动弹出。**把验证码粘进去**（已经复制到剪贴板了，直接 Ctrl+V），点授权。
-看到 `✓ Logged in as 你的用户名` 就是成功了，回到终端会自动继续。
+验证码已经自动复制到剪贴板了。浏览器会自动打开授权页（没弹出就手动开
+https://github.com/login/device ），**把码粘进去**（Ctrl+V），点授权。
 
-> 卡住的话：手动打开 https://github.com/login/device ，手输那串码。
-> 码的有效期大约 15 分钟，过期就重跑一次这条命令。
+看到 `✓ Logged in as 你的用户名` 就成功了，终端会自动继续。
+
+> 码的有效期大约 15 分钟，过期就重跑一次这条命令，会给你一个新的。
 
 ### 第二步：建仓库并推送
 
