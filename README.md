@@ -28,14 +28,46 @@ python -m http.server 8000
 
 ---
 
-## 部署到 GitHub Pages
+## 传到 GitHub 并部署
 
-1. 新建一个仓库，把 `DQQ` 目录里的所有文件推到根目录
-2. 仓库 **Settings → Pages**
-3. Source 选 `Deploy from a branch`，分支选 `main`，目录选 `/ (root)`
-4. 等一分钟，访问 `https://你的用户名.github.io/仓库名/`
+本地仓库已经建好了（`main` 分支，首次提交完成）。剩下一共两条命令：
 
-不需要改任何配置，也没有相对路径问题。
+```bash
+# 1) 登录一次（会打开浏览器，跟着点授权就行，不用手输密码）
+gh auth login
+
+# 2) 建仓库并直接推上去（仓库名 dqq 可以改成你想要的）
+gh repo create dqq --public --source=. --push
+```
+
+没装 `gh` 的话，用纯 git 也行 —— 先去 github.com 网页上新建一个**空仓库**（不要勾 README），然后：
+
+```bash
+git remote add origin https://github.com/你的用户名/dqq.git
+git push -u origin main
+```
+
+### 开启网页访问（GitHub Pages）
+
+推上去之后：
+
+1. 仓库 **Settings → Pages**
+2. Source 选 `Deploy from a branch`，分支 `main`，目录 `/ (root)`
+3. 等一两分钟，访问 `https://你的用户名.github.io/dqq/`
+
+不需要改任何配置，也没有相对路径问题。仓库里的 `.nojekyll` 是为了让 GitHub Pages
+原样发布所有文件（默认的 Jekyll 会吃掉下划线开头的文件和目录）。
+
+### 以后更新代码
+
+```bash
+git add -A
+git commit -m "改了什么"
+git push
+```
+
+> 别忘了：改了 `js/` 或 `css/` 要把 `index.html` 里的 `?v=` 加一，
+> 否则访客会一直跑缓存的旧版本（详见下面「改完代码要给资源加版本号」）。
 
 ---
 
