@@ -115,6 +115,64 @@ git push
 | 网页打开是白的 | 打开浏览器控制台看报错。多半是 `?v=` 版本号没改，浏览器拿了旧 JS |
 | 不想装 gh | 去 github.com 网页新建一个**空仓库**（不要勾 README / .gitignore / license），然后 `git remote add origin https://github.com/你的用户名/dqq.git` + `git push -u origin main` |
 
+## 在学校机房部署（Windows 7）
+
+给机房电脑单独备了一套脚本，在 `deploy/` 目录里，**双击就能跑**。
+
+| 文件 | 用途 |
+|---|---|
+| `deploy/一键部署.bat` | 提交 - 建仓库 - 推送 - 开 Pages，一条龙 |
+| `deploy/清除凭据.bat` | 抹掉本机保存的 Token（公用电脑用完跑一下） |
+
+### 用之前
+
+**Windows 7 必须装对 Git 版本。** 官方从 v2.47.0 起就不支持 Win7 了，
+v2.48 的安装包甚至会主动拒绝安装。Win7 上要用 **2.46.2**：
+
+- 64 位：https://github.com/git-for-windows/git/releases/download/v2.46.2.windows.1/Git-2.46.2-64-bit.exe
+- 32 位：https://github.com/git-for-windows/git/releases/download/v2.46.2.windows.1/Git-2.46.2-32-bit.exe
+
+脚本检测不到 git 时会直接把这些地址打出来。
+
+### 怎么用
+
+1. 把整个项目文件夹拷到机房电脑（U 盘 / 局域网共享都行，`deploy` 子目录要在项目根目录下）
+2. 双击 `deploy\一键部署.bat`
+3. 填四项：GitHub 用户名、仓库名、Token、仓库可见性
+
+Token 在 GitHub 网页生成：右上角头像 - Settings - Developer settings -
+Personal access tokens - Tokens (classic) - Generate new token，**勾选 `repo` 一项即可**。
+
+跑完会打印仓库地址和在线试玩地址。重复运行是安全的，会直接推送新改动。
+
+### 几个实现上的坑（都踩过）
+
+| 坑 | 处理 |
+|---|---|
+| **中文编码** | `.bat` 存成 **GBK**。中文版 Windows 的 cmd 代码页是 936，存 UTF-8 会乱码。脚本开头会 `chcp 936`，这样即使系统被改成 65001 也能正常显示 |
+| **Token 被提交** | 配置存到 `%USERPROFILE%\.dqq-deploy-config.bat`，也就是**仓库外面**。一开始放在 `deploy/` 里，结果被 GitHub 的密钥扫描拒推（`push declined due to repository rule violations`） |
+| **JSON 里的中文** | 建仓库的请求体含中文描述，batch 写出来是 GBK 字节，GitHub 要求 UTF-8，返回 `400 Problems parsing JSON`。改成用 JSON 的 Unicode 转义写法，整行纯 ASCII |
+| **`chcp` 吃输入** | `chcp` 会清空 stdin 缓冲区。真人敲键盘没影响（输入还没产生），但用管道喂输入做自动化测试时会读到空值 —— 所以测试要用「延迟送输入」的方式 |
+| **批处理语法** | 别在圆括号块里写裸的右括号（会提前闭合代码块）和单个感叹号（会跟后面的变量引用配对）。`^` 号在引号内不是转义符，会原样显示出来 |
+
+### 安全提醒
+
+跑完之后 Token 明文存在两个地方：
+
+- `%USERPROFILE%\.dqq-deploy-config.bat`（仓库外，不会被提交）
+- `.git\config` 的 origin 地址里
+
+**公用机房电脑用完请运行 `deploy\清除凭据.bat`**，它会清掉这两处。
+另外建议顺手去 GitHub 上撤销那个 Token。
+
+### 机房浏览器要求
+
+游戏的脚本用了 `Promise` / `fetch` / `async`，**需要 Chrome 55 以上**。
+Win7 能装的最后一版 Chrome 是 109，可以用。
+
+**不要用 IE 或 360/QQ 浏览器的兼容模式**（IE 内核），跑不起来。
+如果机房锁死了浏览器版本，先在教师机上试试能不能打开。
+
 ## 自定义域名
 
 打算绑定 **jxsdfz.bbroot.com**（DNSHE 注册的免费域名）。目前还没配完，下面是踩过坑之后的正确顺序。
