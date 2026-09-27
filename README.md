@@ -115,6 +115,70 @@ git push
 | 网页打开是白的 | 打开浏览器控制台看报错。多半是 `?v=` 版本号没改，浏览器拿了旧 JS |
 | 不想装 gh | 去 github.com 网页新建一个**空仓库**（不要勾 README / .gitignore / license），然后 `git remote add origin https://github.com/你的用户名/dqq.git` + `git push -u origin main` |
 
+## 自定义域名
+
+已绑定 **jxsdfz.bbroot.com**（在 DNSHE 注册的免费域名）。
+
+### 当前状态
+
+| 项 | 状态 |
+|---|---|
+| GitHub Pages 自定义域名 | 已设置 |
+| 仓库里的 `CNAME` 文件 | 已由 GitHub 自动创建，内容是 `jxsdfz.bbroot.com` |
+| `shanewhatthesix.github.io/dqq` | **正常可用**（200） |
+| `jxsdfz.bbroot.com` | **还没解析**，需要在 DNSHE 加一条 CNAME |
+
+> 实测确认过：**先设自定义域名不会弄坏原来的 github.io 地址**。
+> GitHub 要等 DNS 真能解析之后才会把请求 301 过去，所以这个顺序是安全的。
+
+### 需要在 DNSHE 面板加的记录
+
+`bbroot.com` 的 NS 是 `a.nic.dnshe.org` / `b.nic.dnshe.org`，所以要在 DNSHE 的 DNS 解析里加：
+
+| 字段 | 填什么 |
+|---|---|
+| 记录类型 | `CNAME` |
+| 主机记录 / 名称 | `jxsdfz` |
+| 记录值 / 目标 | `shanewhatthesix.github.io` |
+| TTL | 600 或默认 |
+
+三个容易填错的地方：
+
+1. **目标不要带仓库名** —— 是 `shanewhatthesix.github.io`，不是 `shanewhatthesix.github.io/dqq`
+2. 有些面板要求结尾带点：`shanewhatthesix.github.io.`（带上通常也没错）
+3. 主机记录只填 `jxsdfz`，别填成完整域名（除非面板明确要求）
+
+### 加完之后
+
+DNS 生效（几分钟到几小时，通常很快）后 GitHub 会自动做两件事：
+
+1. 校验 DNS 并签发 Let's Encrypt 证书（可能需要几十分钟）
+2. 之后就可以在 **Settings → Pages** 里勾选 **Enforce HTTPS**
+
+用命令查进度：
+
+```bash
+gh api /repos/shanewhatthesix/dqq/pages --jq '.cname + " | DNS:" + (.protected_domain_state // "未校验") + " | HTTPS强制:" + (.https_enforced|tostring)'
+```
+
+想查 DNS 是否生效：
+
+```bash
+nslookup jxsdfz.bbroot.com 8.8.8.8
+```
+
+解析结果里出现 `shanewhatthesix.github.io` 或 `185.199.10x.153` 这类 GitHub Pages 的 IP 就是通了。
+
+### 换域名
+
+想换一个域名：改 DNSHE 里的记录，然后
+
+```bash
+gh api --method PUT /repos/shanewhatthesix/dqq/pages -f "cname=新域名"
+```
+
+GitHub 会自动更新仓库里的 `CNAME` 文件。**不要在网页上手改 `CNAME` 文件**，会被下次部署覆盖。
+
 ## 改完代码要给资源加版本号
 
 `index.html` 里每个 css / js 引用后面都挂着 `?v=1.0.1`：
