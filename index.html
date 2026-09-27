@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>附中·电子斗蛐蛐</title>
+<meta name="description" content="上传你身边的蛐蛐，AI 生成属性和技能，让它们打一场。附中电子科创社团出品。">
+<meta name="theme-color" content="#F3EEE2">
+
+<!-- 图标用校徽；assets/logo.png 万一被删了，JS 会自动退回手绘蛐蛐标记 -->
+<link rel="icon" href="assets/logo.png">
+<link rel="apple-touch-icon" href="assets/logo.png">
+
+<link rel="stylesheet" href="css/style.css?v=1.1.0">
+<link rel="stylesheet" href="css/battle.css?v=1.1.0">
+</head>
+<body>
+
+<div class="app">
+  <!-- 左侧密封线：考卷的标志性元素，纯装饰 -->
+  <div class="seal-line" aria-hidden="true">密封线内不要答题</div>
+
+  <header class="topbar">
+    <div class="brand" id="brand" title="回蛐蛐库">
+      <span class="brand-icon" id="brand-icon"></span>
+      <span class="brand-text">附中·电子斗蛐蛐</span>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="topbar-right">
+      <span class="pill" id="roster-count" title="蛐蛐库里有多少只">0 只</span>
+    </div>
+  </header>
+
+  <main class="view" id="view"></main>
+
+  <footer class="footer">
+    <span>纯网页 · 零硬件 · 数据只存在你自己的浏览器里</span>
+    <span class="footer-sep">·</span>
+    <span id="version-label"></span>
+  </footer>
+</div>
+
+<!-- 技能 CG 全屏层 -->
+<div class="cg-layer" id="cg-layer" aria-hidden="true">
+  <div class="cg-inner">
+    <img class="cg-image" id="cg-image" alt="技能 CG">
+    <div class="cg-caption" id="cg-caption"></div>
+  </div>
+</div>
+
+<!-- 伤害数字 / 闪光 / 提示 都在这一层 -->
+<div class="fx-layer" id="fx-layer" aria-hidden="true"></div>
+
+<!-- 顺序有讲究：数据 → 工具 → 规则 → 引擎 → 存储 → 生成 → 界面 → 启动。
+     每个引用后面的 ?v= 是缓存版本号。改了 js/css 一定要把它 +1，
+     否则学生那边浏览器会用缓存的旧文件（GitHub Pages 不会主动失效缓存），
+     出现「代码明明改了但没生效」。改完记得同步 js/data.js 里的 DQQ.VERSION。 -->
+<script src="js/data.js?v=1.1.0"></script>
+<script src="js/util.js?v=1.1.0"></script>
+<script src="js/icons.js?v=1.1.0"></script>
+<script src="js/effect.js?v=1.1.0"></script>
+<script src="js/balance.js?v=1.1.0"></script>
+<script src="js/engine.js?v=1.1.0"></script>
+<script src="js/storage.js?v=1.1.0"></script>
+<script src="js/generator.js?v=1.1.0"></script>
+<script src="js/llm.js?v=1.1.0"></script>
+<script src="js/commentary.js?v=1.1.0"></script>
+<script src="js/ui-common.js?v=1.1.0"></script>
+<script src="js/ui-roster.js?v=1.1.0"></script>
+<script src="js/ui-creator.js?v=1.1.0"></script>
+<script src="js/ui-battle.js?v=1.1.0"></script>
+<script src="js/ui-share.js?v=1.1.0"></script>
+<script src="js/ui-settings.js?v=1.1.0"></script>
+<script src="js/app.js?v=1.1.0"></script>
+</body>
+</html>

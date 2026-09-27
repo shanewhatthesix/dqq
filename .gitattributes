@@ -1,0 +1,14 @@
+# 统一行尾。社团里 Windows / Mac 混着用，不加这个的话
+# 每换一个人提交，所有文件都会显示「整个文件被改动」，diff 完全没法看。
+* text=auto eol=lf
+
+# 明确按二进制处理，别让 git 去猜
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+
+# 这些文件在 GitHub 上按语言统计时排除掉
+tools/*.js linguist-language=JavaScript
